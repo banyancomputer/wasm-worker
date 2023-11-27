@@ -1,4 +1,4 @@
-# Wasm Worker
+# Wasm Playground
 Simple example of implementing and calling a Web Worker from Wasmable Rust to Browser Javascript
 
 # Pre Requisites
