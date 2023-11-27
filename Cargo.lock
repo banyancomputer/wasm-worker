@@ -725,7 +725,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasm-worker"
+name = "wasm-playground"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
