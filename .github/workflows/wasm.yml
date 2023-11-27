@@ -1,0 +1,14 @@
+on: [push, pull_request]
+
+jobs:
+  # TODO: better ci
+  wasm-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Wasm Pack Install
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Wasm Pack Test
+        run: wasm-pack test --headless --firefox

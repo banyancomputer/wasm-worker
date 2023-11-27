@@ -1,0 +1,28 @@
+{
+  "name": "wasm-playground",
+  "version": "0.0.0",
+  "description": "Example of consuming a Wasm Package with WebPack",
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack serve",
+    "test": "wasm-pack test --firefox --headless"
+  },
+  "devDependencies": {
+    "@wasm-tool/wasm-pack-plugin": "^1",
+    "copy-webpack-plugin": "^11.0.0",
+    "webpack": "^5.86.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amiller68/wasm-playground.git"
+  },
+  "keywords": [
+    "webassembly",
+    "wasm",
+    "rust",
+    "webpack"
+  ],
+  "author": "Al Miller <al@krondor.org>",
+  "license": "(MIT)"
+}
