@@ -1,7 +1,7 @@
 [package]
-name = "wasm-playground"
+name = "wasm-worker-example"
 version = "0.1.0"
-authors = ["amiller68 <al@krondor.org>"]
+authors = ["amiller68 <alex@banyan.computer>"]
 edition = "2021"
 
 [lib]
@@ -12,14 +12,30 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "^0.2"
+cfg-if = "^0.1"
 console_error_panic_hook = { version = "^0.1", optional = true }
 wee_alloc = { version = "^0.4", optional = true }
 js-sys = "^0.3"
+wasm-bindgen-futures = "^0.4"
+wasm-streams = "^0.3"
+futures = "^0.3"
+sha2 = "^0.10"
+serde-wasm-bindgen = "^0.6"
+hex = "^0.4"
+
+[dependencies.web-sys]
+version = "^0.3"
+features = [
+  "File",
+  "Blob",
+  "ReadableStream",
+]
 
 [dependencies.gloo]
 version = "^0.10"
 features = [
   "console",
+  "worker"
 ]
 
 [dev-dependencies]

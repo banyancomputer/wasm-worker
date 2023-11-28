@@ -1,7 +1,19 @@
-import * as WasmWorker from '../pkg/wasm-playground.js'
+// Initialize the worker
+const worker = new Worker("./worker.js");
 
-console.log("strapped in and ready to go!");
+let button = document.querySelector("#button");
+let response = document.querySelector("#response");
 
-// Call our Client and start playing with Wasm!
-new WasmWorker.Client();
+worker.addEventListener("message", ev => {
+    console.log("browser: received hello event");
+    if (ev.data.allGood) {
+        response.textContent = ev.data.message;
+    } else {
+        response.textContent = "Something went wrong!";
+    }
+});
+
+button.addEventListener("click", _ev => {
+    worker.postMessage("browser");
+});
 

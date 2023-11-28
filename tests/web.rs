@@ -5,12 +5,18 @@
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
 
-extern crate wasm_playground;
-use wasm_playground::Client;
+extern crate wasm_worker;
+use wasm_worker::Client;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
 fn new() {
     Client::new();
+}
+
+#[wasm_bindgen_test]
+fn hello() {
+    let client = Client::new();
+    client.hello();
 }

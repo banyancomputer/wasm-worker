@@ -1,7 +1,7 @@
 {
-  "name": "wasm-playground",
+  "name": "wasm-worker-example",
   "version": "0.0.0",
-  "description": "Example of consuming a Wasm Package with WebPack",
+  "description": "Example of consuming a Wasm Web Worker with WebPack",
   "scripts": {
     "build": "webpack",
     "dev": "webpack-dev-server",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amiller68/wasm-playground.git"
+    "url": "git+https://github.com/banyancomputer/wasm-worker.git"
   },
   "keywords": [
     "webassembly",
@@ -24,6 +24,6 @@
     "rust",
     "webpack"
   ],
-  "author": "Al Miller <al@krondor.org>",
+  "author": "Al Miller <alex@banyan.computer>",
   "license": "(MIT)"
 }

@@ -8,20 +8,18 @@ const dist = path.resolve(__dirname, 'dist');
 const baseConfig = {
   mode: 'production',
 
-  entry: {
-    tomblet: './www/index.js',
+  devServer: {
+    host: '127.0.0.1',
+    port: 8000,
   },
+  
+  entry: './www/index.js',
 
   resolve: {
-    extensions: ['.js', '.wasm'],
+    extensions: ['.js'],
   },
 
   plugins: [
-    new WasmPackPlugin({
-      crateDirectory: __dirname,
-      extraArgs: '--dev',
-      outName: 'wasm-playground',
-    }),
     new CopyWebpackPlugin({
       patterns: [
         { from: "./www/index.html", to: "index.html" }
@@ -29,29 +27,39 @@ const baseConfig = {
     })
   ],
 
+  output: {
+    path: dist,
+    filename: 'index.js',
+  },
+}
+
+const workerConfig = {
+  mode: 'production',
+
+  entry: './www/worker.js',
+
+  plugins: [
+    new WasmPackPlugin({
+      crateDirectory: __dirname,
+      extraArgs: '--dev',
+      outName: 'wasm-worker-example',
+    }),
+  ],
+
+  resolve: {
+    extensions: ['.js', '.wasm'],
+  },
+
+  output: {
+    path: dist,
+    filename: 'worker.js',
+  },
+
+  target: 'webworker',
+  
   experiments: {
     asyncWebAssembly: true,
   },
 }
 
-const devServerConfig = {
-  devServer: {
-    host: '127.0.0.1',
-    port: 8000,
-  },
-};
-
-const outputConfig = {
-  output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: 'index.js'
-  }
-}
-
-module.exports = (_env) => {
-  return [{
-    ...baseConfig,
-    ...devServerConfig,
-    ...outputConfig,
-  }];
-};
+module.exports = [baseConfig, workerConfig]; 

@@ -26,13 +26,12 @@ impl Client {
      */ 
     #[wasm_bindgen(constructor)]
     pub fn new() -> Client {
-        utils::set_panic_hook();
-        console::log!("hello from wasm");
+        utils::init();
+        console::log!("wasm is initialized");
         Self
     }
-}
 
-/*
- * Here we can define things we don't want bound and exported to Js
- */
-impl Client {}
+    pub fn hello(&self, name: &str) -> String {
+        format!("Hello, {}!", name)
+    }
+}
