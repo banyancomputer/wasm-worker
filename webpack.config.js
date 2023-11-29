@@ -6,17 +6,10 @@ const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin');
 const dist = path.resolve(__dirname, 'dist');
 
 const baseConfig = {
-  mode: 'production',
+  mode: 'development',
 
   devServer: {
-    host: '127.0.0.1',
     port: 8000,
-  },
-  
-  entry: './www/index.js',
-
-  resolve: {
-    extensions: ['.js'],
   },
 
   plugins: [
@@ -27,24 +20,7 @@ const baseConfig = {
     })
   ],
 
-  output: {
-    path: dist,
-    filename: 'index.js',
-  },
-}
-
-const workerConfig = {
-  mode: 'production',
-
-  entry: './www/worker.js',
-
-  plugins: [
-    new WasmPackPlugin({
-      crateDirectory: __dirname,
-      extraArgs: '--dev',
-      outName: 'wasm-worker-example',
-    }),
-  ],
+  entry: './www/index.js',
 
   resolve: {
     extensions: ['.js', '.wasm'],
@@ -52,14 +28,40 @@ const workerConfig = {
 
   output: {
     path: dist,
-    filename: 'worker.js',
+    filename: 'index.js'
+  }
+}
+
+const workerConfig = {
+  mode: 'development',
+
+  entry: './www/worker.js',
+  
+  plugins: [
+    new WasmPackPlugin({
+      crateDirectory: __dirname,
+    })
+  ],
+
+  experiments: {
+    asyncWebAssembly: true,
+  }, 
+  
+  resolve: {
+    extensions: ['.js', '.wasm'],
+  },
+
+  output: {
+    path: dist,
+    filename: 'worker.js'
   },
 
   target: 'webworker',
-  
-  experiments: {
-    asyncWebAssembly: true,
-  },
 }
 
-module.exports = [baseConfig, workerConfig]; 
+module.exports = (_env) => {
+  return [
+    baseConfig,
+    workerConfig
+  ]
+}
