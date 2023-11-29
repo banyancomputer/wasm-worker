@@ -4,61 +4,44 @@ use futures_util::StreamExt;
 use js_sys::ArrayBuffer;
 use js_sys::{Function, Promise};
 use wasm_bindgen_futures::future_to_promise;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
-use wasm_bindgen::closure::Closure;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
 use wasm_streams::ReadableStream as Stream;
-use web_sys::{Blob, File, FileReader, MessageEvent};
-
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+use web_sys::{Blob, File};
+use blake3::Hasher;
 
 #[wasm_bindgen]
-pub struct WasmWorker {
-    progress_callbacks: Rc<RefCell<HashMap<u32, Function>>>,
-}
+pub struct WasmHasher;
 
 #[wasm_bindgen]
-impl WasmWorker {
+impl WasmHasher {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> WasmWorker {
+    pub fn new() -> WasmHasher {
         utils::init();
         utils::log("Initializing WasmWorker");
-        Self {
-            progress_callbacks: Rc::new(RefCell::new(HashMap::new())),
-        }
+        Self
     }
 
-    /// Register a progress callback for a specific task
-    pub fn register_progress_callback(&mut self, task_id: u32, callback: &Function) {
-        utils::log(&format!(
-            "Registering progress callback for task {}",
-            task_id
-        ));
-        self.progress_callbacks
-            .borrow_mut()
-            .insert(task_id, callback.clone());
-    }
-
-    /// Process a file with a given task ID
-    pub async fn process_file(&self, task_id: u32, file: File) -> Promise {
-        utils::log(&format!("Processing file with task ID {}", task_id));
-        let progress_callbacks = self.progress_callbacks.clone();
+    /// Process a file and return a hash of the file
+    /// * `file` - The file to hash
+    /// * `progress_callback` - A optional callback function to call with progress updates. 
+    ///                        The callback function should accept a single argument which is the progress percentage.
+    #[wasm_bindgen(js_name = hashFile)]
+    pub async fn hash_file(&self, file: File, progress_callback: Option<Function>) -> Promise {
+        let progress_callback = progress_callback.clone();
+        let mut hasher = Hasher::new();
         future_to_promise(async move {
-            let total_size = file.size() as usize;
-            let mut offset = 0;
+            let total_size = file.size() as u64;
+            let mut offset = 0 as u64;
             let file_blob = Blob::from(file);
             let mut stream = Stream::from_raw(file_blob.stream())
                 .into_stream()
                 .map(|chunk| chunk.map(|chunk| ArrayBuffer::from(chunk)));
 
-            // Read over the stream
             while let Some(Ok(chunk)) = stream.next().await {
-                let chunk_size = chunk.byte_length() as usize;
+                let chunk_size = chunk.byte_length() as u64;
+
+                let chunk_bytes = js_sys::Uint8Array::new(&chunk).to_vec();
+                hasher.update(&chunk_bytes);
 
                 offset += chunk_size;
                 if offset > total_size {
@@ -66,14 +49,14 @@ impl WasmWorker {
                 }
                 let progress = ((offset as f64 / total_size as f64) * 100.0).round();
 
-                if let Some(callback) = progress_callbacks.borrow().get(&task_id) {
+                if let Some(callback) = &progress_callback {
                     callback
                         .call1(&JsValue::NULL, &JsValue::from(progress))
                         .unwrap();
                 }
             }
-
-            Ok(JsValue::UNDEFINED)
+            let hash = hasher.finalize().to_hex().to_string();
+            Ok(JsValue::from(hash))
         })
     }
 }

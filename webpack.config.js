@@ -39,7 +39,7 @@ const workerConfig = {
   
   plugins: [
     new WasmPackPlugin({
-      crateDirectory: __dirname,
+      crateDirectory: __dirname
     })
   ],
 
