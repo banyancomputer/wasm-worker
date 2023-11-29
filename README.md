@@ -1,5 +1,7 @@
-# Wasm Playground
+# Wasm Hasher 
 Simple example of implementing and calling a Web Worker from Wasmable Rust to Browser Javascript
+
+Also implements a lil async Client model for the Web Worker
 
 # Pre Requisites
 - yarn
@@ -8,7 +10,7 @@ Simple example of implementing and calling a Web Worker from Wasmable Rust to Br
 
 # Run Wasm Tests
 
-`yarn tests`
+`yarn test`
 
 # Run Web Example
 

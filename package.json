@@ -1,7 +1,7 @@
 {
-  "name": "wasm-worker-example",
+  "name": "wasm-hasher",
   "version": "0.0.0",
-  "description": "Example of consuming a Wasm Web Worker with WebPack",
+  "description": "Simple example of consuming a Wasm Web Worker with WebPack",
   "scripts": {
     "build": "webpack",
     "dev": "webpack-dev-server",

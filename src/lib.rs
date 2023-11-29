@@ -1,13 +1,13 @@
 mod utils;
 
+use blake3::Hasher;
 use futures_util::StreamExt;
 use js_sys::ArrayBuffer;
 use js_sys::{Function, Promise};
-use wasm_bindgen_futures::future_to_promise;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::future_to_promise;
 use wasm_streams::ReadableStream as Stream;
 use web_sys::{Blob, File};
-use blake3::Hasher;
 
 #[wasm_bindgen]
 pub struct WasmHasher;
@@ -23,10 +23,10 @@ impl WasmHasher {
 
     /// Process a file and return a hash of the file
     /// * `file` - The file to hash
-    /// * `progress_callback` - A optional callback function to call with progress updates. 
+    /// * `progress_callback` - A optional callback function to call with progress updates.
     ///                        The callback function should accept a single argument which is the progress percentage.
     #[wasm_bindgen(js_name = hashFile)]
-    pub async fn hash_file(&self, file: File, progress_callback: Option<Function>) -> Promise {
+    pub fn hash_file(&self, file: File, progress_callback: Option<Function>) -> Promise {
         let progress_callback = progress_callback.clone();
         let mut hasher = Hasher::new();
         future_to_promise(async move {
