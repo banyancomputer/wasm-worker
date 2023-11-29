@@ -12,12 +12,17 @@ use web_sys::{Blob, File};
 #[wasm_bindgen]
 pub struct WasmHasher;
 
+impl Default for WasmHasher {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 impl WasmHasher {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WasmHasher {
         utils::init();
-        utils::log("Initializing WasmWorker");
         Self
     }
 
@@ -31,11 +36,11 @@ impl WasmHasher {
         let mut hasher = Hasher::new();
         future_to_promise(async move {
             let total_size = file.size() as u64;
-            let mut offset = 0 as u64;
+            let mut offset = 0_u64;
             let file_blob = Blob::from(file);
             let mut stream = Stream::from_raw(file_blob.stream())
                 .into_stream()
-                .map(|chunk| chunk.map(|chunk| ArrayBuffer::from(chunk)));
+                .map(|chunk| chunk.map(ArrayBuffer::from));
 
             while let Some(Ok(chunk)) = stream.next().await {
                 let chunk_size = chunk.byte_length() as u64;
