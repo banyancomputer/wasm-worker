@@ -4,7 +4,6 @@
   "description": "Simple example of consuming a Wasm Web Worker with WebPack",
   "scripts": {
     "build": "webpack",
-    "start": "webpack serve --open",
     "dev": "webpack-dev-server",
     "test": "wasm-pack test --firefox --headless"
   },

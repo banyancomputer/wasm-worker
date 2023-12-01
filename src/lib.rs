@@ -1,12 +1,12 @@
 mod utils;
 
+use blake3::Hasher;
 use futures::TryStreamExt;
 use js_sys::{Function, Promise, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 use wasm_streams::ReadableStream as Stream;
 use web_sys::File;
-use blake3::Hasher;
 
 #[wasm_bindgen]
 pub struct WasmHasher;
