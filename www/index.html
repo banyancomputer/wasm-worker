@@ -20,7 +20,15 @@
   <body>
     <input type="file" id="fileInput">
     <button id="uploadButton">Hash File</button>
-    <p id="response"> Your hash will appear here! </p>
-    <script src="index.js"></script>
+    <br>
+    <br>
+    <p> This example will hash a file on the main thread and twice on a worker thread. </p>
+
+    <p id="response_0"> Worker 1 progress will appear here! </p>
+    <p id="response_1"> Worker 2 progress will appear here! </p>
+    <p id="response_2"> Main Thread progress will appear here! </p>
+    <p id="response_3"> Worker results will appear here! </p>
+    <p id="response_4"> Main Thread results will appear here! </p>
+    <script defer="defer" src="index.js"></script>
   </body>
 </html>

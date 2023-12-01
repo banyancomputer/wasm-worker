@@ -1,13 +1,12 @@
 mod utils;
 
-use blake3::Hasher;
-use futures_util::StreamExt;
-use js_sys::ArrayBuffer;
-use js_sys::{Function, Promise};
+use futures::TryStreamExt;
+use js_sys::{Function, Promise, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 use wasm_streams::ReadableStream as Stream;
-use web_sys::{Blob, File};
+use web_sys::File;
+use blake3::Hasher;
 
 #[wasm_bindgen]
 pub struct WasmHasher;
@@ -23,6 +22,7 @@ impl WasmHasher {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WasmHasher {
         utils::init();
+        utils::log("WasHasher::new");
         Self
     }
 
@@ -31,22 +31,19 @@ impl WasmHasher {
     /// * `progress_callback` - A optional callback function to call with progress updates.
     ///                        The callback function should accept a single argument which is the progress percentage.
     #[wasm_bindgen(js_name = hashFile)]
+    // pub fn hash_file(&self, file: File, progress_callback: Option<Function>) -> Promise {
     pub fn hash_file(&self, file: File, progress_callback: Option<Function>) -> Promise {
         let progress_callback = progress_callback.clone();
         let mut hasher = Hasher::new();
         future_to_promise(async move {
             let total_size = file.size() as u64;
             let mut offset = 0_u64;
-            let file_blob = Blob::from(file);
-            let mut stream = Stream::from_raw(file_blob.stream())
-                .into_stream()
-                .map(|chunk| chunk.map(ArrayBuffer::from));
+            let mut s = Stream::from_raw(file.stream().unchecked_into()).into_stream();
 
-            while let Some(Ok(chunk)) = stream.next().await {
-                let chunk_size = chunk.byte_length() as u64;
-
-                let chunk_bytes = js_sys::Uint8Array::new(&chunk).to_vec();
-                hasher.update(&chunk_bytes);
+            while let Some(chunk) = s.try_next().await.unwrap() {
+                let chunk = chunk.unchecked_into::<Uint8Array>();
+                let chunk_size = chunk.length() as u64;
+                hasher.update(&chunk.to_vec());
 
                 offset += chunk_size;
                 if offset > total_size {

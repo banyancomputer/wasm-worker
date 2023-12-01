@@ -23,3 +23,7 @@ cfg_if! {
 pub fn init() {
     set_panic_hook();
 }
+
+pub fn log(s: &str) {
+    web_sys::console::log_1(&s.into());
+}
