@@ -45,16 +45,15 @@ impl Channel {
                 .recv(Some(std::time::Duration::from_secs(interval_secs as u64)));
 
             match res {
-                Ok(request) => match request {
-                    Some(request) => match request {
+                Ok(request) => if let Some(request) = request {
+                    match request {
                         Request::Update { progress } => {
                             callback.call1(&JsValue::NULL, &JsValue::from(progress))?;
                         }
                         Request::Done => {
                             break;
                         }
-                    },
-                    None => {}
+                    }
                 },
                 Err(_) => {
                     break;
