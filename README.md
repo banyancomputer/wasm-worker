@@ -40,6 +40,7 @@ It serves as a simple playground to test out working with Web Workers and Wasm a
 # Functionality to Implement
 - [x] Implement a simple web worker in wasm
 - [x] 2 stage process with a web worker with progress updates
+- [x] Basic state management with a web worker using local storage 
 - [x] Implement a simple web worker in wasm with a shared channel
 - [ ] Parallelize a simple task with rayon in wasm, maybe the writing of the hash chunks
   
@@ -49,6 +50,11 @@ It serves as a simple playground to test out working with Web Workers and Wasm a
 - https://github.com/Ngalstyan4/mandelbrot-wasm-rust-rayon
 - https://github.com/wasm-rs/shared-channel/tree/master/example
 - https://github.com/GoogleChromeLabs/wasm-bindgen-rayon/tree/main/demo
+
+# Findings 
+- gloo is not sufficient for shipping workers to js. comlink is a more ergonomic solution
+- trying to design monolithic workers packed into wasm modules is not a good idea. wasm-bindgen-rayon does it, but the bindins are very simple.
+- if you need to leverage further threading inside a web worker, it's better to use a more low level threading library like rayon
 
 # Questions
 - How much overhead is associated with transferring data between the js ans wasm, especially with callbacks? Should we be relying more on shared memory?

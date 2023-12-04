@@ -19,6 +19,12 @@ class App {
         this._state = new Module.State();
         this._hasherWorkerApi = hasherWorker as HashWorker;
         this._taskIdCounter = 0;
+        const hashedFilesElem = document.querySelector("#hashedFiles");
+        //@ts-ignore
+        hashedFilesElem.textContent = 'Hashed files: ' + this._state.files().map((f: Module.HashedFile) => {
+            let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
+            return str;
+        }).join(' || \n\n ');
     }
     
     nextTask() {
@@ -53,6 +59,10 @@ class App {
 
     clearState() {
         this._state.clear();
+    }
+
+    saveState() {
+        this._state.save();
     }
 }
 
@@ -107,10 +117,12 @@ document.querySelector("#hashFileButton").addEventListener("click", () => {
         //@ts-ignore
         resultElem.textContent = 'Hash completed: ' + res.hash();
         wasmHasher?.addFile(res);
-        if (wasmHasher?.files().length > 0) {
-            //@ts-ignore
-            hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher.files().map((f: Module.HashedFile) => f.name()).join(', ');
-        }
+        wasmHasher?.saveState();
+        //@ts-ignore
+        hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher?.files().map((f: Module.HashedFile) => {
+            let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
+            return str;
+        }).join(' || \n\n ');
     })
     .catch((err: any) => {
         //@ts-ignore
@@ -159,10 +171,11 @@ document.querySelector("#hashFileWithChannelButton").addEventListener("click", (
         //@ts-ignore
         resultElem.textContent = 'Hash completed: ' + res.hash();
         wasmHasher?.addFile(res);
-        if (wasmHasher?.files().length > 0) {
-            //@ts-ignore
-            hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher.files().map((f: Module.HashedFile) => f.name()).join(', ');
-        }
+        //@ts-ignore
+        hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher?.files().map((f: Module.HashedFile) => {
+            let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
+            return str;
+        }).join(' || \n\n ');
     })
     .catch((err: any) => {
         //@ts-ignore
@@ -171,5 +184,6 @@ document.querySelector("#hashFileWithChannelButton").addEventListener("click", (
     .finally(() => {
         //@ts-ignore
         progressElem.textContent = 'Progress: 100%'
+        wasmHasher?.saveState();
     });
 });
