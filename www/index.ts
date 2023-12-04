@@ -1,25 +1,23 @@
 import { wrap } from 'comlink';
-import * as Module from "../pkg";
+import { State, HashedFile  } from '../pkg/index.js';
 import {  HashWorker } from "./worker";
 
 const workerPath = './worker.js';
-let hasherWorker: HashWorker | null = null;
-let wasmHasher: App | null = null;
-wrap<HashWorker>(new Worker(workerPath));
-const initWorker = async () => {
-    const _hasherWorker = new HashWorker();
-    hasherWorker = _hasherWorker;
-}
+const fileInput = document.querySelector("#fileInput");
+const errorElem = document.querySelector("#error");
+const progressElem = document.querySelector("#progress");
+const timeElem = document.querySelector("#time");
+const resultElem = document.querySelector("#result");
+const hashedFilesElem = document.querySelector("#hashedFiles");
 
 class App {
-    _state: any;
+    _state: State;
     _hasherWorkerApi: HashWorker;
     _taskIdCounter: number;
-    constructor() {
-        this._state = new Module.State();
-        this._hasherWorkerApi = hasherWorker as HashWorker;
+    constructor(hasherWorker: HashWorker) {
+        this._state = new State();
+        this._hasherWorkerApi = hasherWorker;
         this._taskIdCounter = 0;
-        const hashedFilesElem = document.querySelector("#hashedFiles");
         //@ts-ignore
         hashedFilesElem.textContent = 'Hashed files: ' + this._state.files().map((f: Module.HashedFile) => {
             let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
@@ -32,24 +30,21 @@ class App {
     }
 
     async taskProgress(taskId: number) {
-        let res = await this._hasherWorkerApi.taskTracker;
-        console.log(res);
+        let res = this._hasherWorkerApi.taskTracker;
         return res.get(taskId) ?? 0.0;
     }
-
-    async hashFile(file: File, taskId: number): Promise<Module.HashedFile> {
+    
+    // Hash a file and return a promise that resolves to a HashedFile
+    // Associated with the taskId so we can track progress
+    async hashFile(file: File, taskId: number): Promise<HashedFile> {
         return await this._hasherWorkerApi.hashFile(file, taskId)
     }
 
-    async hashFileWithChannel(file: File, int: number, cb: any): Promise<Module.HashedFile> {
-        return await this._hasherWorkerApi.hashFileWithChannel(file)
-            .then((res: [Module.Channel, Promise<Module.HashedFile>]) => {
-                res[0].run(int, cb);
-                return res[1];
-            });
+    async hashFileMt(file: File, taskId: number): Promise<HashedFile> {
+        return await this._hasherWorkerApi.hashFileMt(file, taskId)
     }
 
-    addFile(file: Module.HashedFile) {
+    addFile(file: HashedFile) {
         this._state.addFile(file);
     }
 
@@ -66,124 +61,113 @@ class App {
     }
 }
 
-initWorker().then(
-    (_res) => {
-        wasmHasher = new App();
-    }
-);
-
-// @ts-ignore
-document.querySelector("#clearStateButton").addEventListener("click", () => {
-    wasmHasher?.clearState();
+(async () => {
+    // await init();
     //@ts-ignore
-    document.querySelector("#hashedFiles").textContent = 'Hashed files: ';
-
-});
-
-//@ts-ignore
-document.querySelector("#hashFileButton").addEventListener("click", () => {
-    const fileInput = document.querySelector("#fileInput");
-    const errorElem = document.querySelector("#error");
-    const progressElem = document.querySelector("#progress");
-    const resultElem = document.querySelector("#result");
-    const hashedFilesElem = document.querySelector("#hashedFiles");
-   
-    //@ts-ignore
-    if (fileInput.files.length === 0) {
+    let handler = await wrap<HashWorker>(new Worker(workerPath)).handler;
+    let hasherWorker = new HashWorker();
+    let wasmHasher = new App(hasherWorker);
+        
+    // @ts-ignore
+    document.querySelector("#clearStateButton").addEventListener("click", () => {
+        wasmHasher.clearState();
         //@ts-ignore
-        errorElem.textContent = 'No file selected.';
-        return;
-    }
+        document.querySelector("#hashedFiles").textContent = 'Hashed files: ';
 
-    if (!wasmHasher) {
-        //@ts-ignore
-        errorElem.textContent = 'Worker still initializing';
-        return;
-    }
-
-    //@ts-ignore
-    const file = fileInput.files[0];
-
-    let taskId = wasmHasher.nextTask(); 
-
-    let interval = setInterval(() => {
-        wasmHasher?.taskProgress(taskId).then((res: any) => {
-            //@ts-ignore
-            progressElem.textContent = 'Progress: ' + res + '%';
-        });
-    }, 500);
-
-    wasmHasher?.hashFile(file, taskId).then((res: Module.HashedFile) => {
-        //@ts-ignore
-        resultElem.textContent = 'Hash completed: ' + res.hash();
-        wasmHasher?.addFile(res);
-        wasmHasher?.saveState();
-        //@ts-ignore
-        hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher?.files().map((f: Module.HashedFile) => {
-            let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
-            return str;
-        }).join(' || \n\n ');
-    })
-    .catch((err: any) => {
-        //@ts-ignore
-        errorElem.textContent = 'Hash failed: ' + err.message;
-    })
-    .finally(() => {
-        //@ts-ignore
-        progressElem.textContent = 'Progress: 100%'
-        clearInterval(interval);
     });
-});
-
-
-//@ts-ignore
-document.querySelector("#hashFileWithChannelButton").addEventListener("click", () => {
-    const fileInput = document.querySelector("#fileInput");
-    const errorElem = document.querySelector("#error");
-    const progressElem = document.querySelector("#progress");
-    const resultElem = document.querySelector("#result");
-    const hashedFilesElem = document.querySelector("#hashedFiles");
-   
-    //@ts-ignore
-    if (fileInput.files.length === 0) {
-        //@ts-ignore
-        errorElem.textContent = 'No file selected.';
-        return;
-    }
-
-    if (!wasmHasher) {
-        //@ts-ignore
-        errorElem.textContent = 'Worker still initializing';
-        return;
-    }
 
     //@ts-ignore
-    const file = fileInput.files[0];
-
-    wasmHasher?.hashFileWithChannel(
-        file,
-        1,
-        (progress: number) => {
+    document.querySelector("#hashFileButton").addEventListener("click", () => {
+        //@ts-ignore
+        if (fileInput.files.length === 0) {
             //@ts-ignore
-            progressElem.textContent = 'Progress: ' + progress + '%';
+            errorElem.textContent = 'No file selected.';
+            return;
         }
-    ).then((res: Module.HashedFile) => {
+
         //@ts-ignore
-        resultElem.textContent = 'Hash completed: ' + res.hash();
-        wasmHasher?.addFile(res);
-        //@ts-ignore
-        hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher?.files().map((f: Module.HashedFile) => {
-            let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
-            return str;
-        }).join(' || \n\n ');
-    })
-    .catch((err: any) => {
-        //@ts-ignore
-        errorElem.textContent = 'Hash failed: ' + err.message;
-    })
-    .finally(() => {
-        //@ts-ignore
-        progressElem.textContent = 'Progress: 100%'
-        wasmHasher?.saveState();
+        const file = fileInput.files[0];
+
+        let taskId = wasmHasher.nextTask(); 
+
+        let interval = setInterval(() => {
+            wasmHasher.taskProgress(taskId).then((res: any) => {
+                //@ts-ignore
+                progressElem.textContent = 'Progress: ' + res + '%';
+            });
+        }, 500);
+
+        const now = performance.now();
+        wasmHasher.hashFile(file, taskId).then((res: HashedFile) => {
+            let time = performance.now() - now;
+            //@ts-ignore
+            timeElem.textContent = 'Time: ' + time + 'ms';
+            //@ts-ignore
+            resultElem.textContent = 'Hash completed: ' + res.hash();
+            wasmHasher.addFile(res);
+            wasmHasher.saveState();
+            //@ts-ignore
+            hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher.files().map((f: Module.HashedFile) => {
+                let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
+                return str;
+            }).join(' || \n\n ');
+        })
+        .catch((err: any) => {
+            //@ts-ignore
+            errorElem.textContent = 'Hash failed: ' + err.message;
+        })
+        .finally(() => {
+            //@ts-ignore
+            progressElem.textContent = 'Progress: 100%'
+            clearInterval(interval);
+        });
     });
-});
+
+    //@ts-ignore
+    document.querySelector("#hashFileMtButton").addEventListener("click", () => {
+        //@ts-ignore
+        if (fileInput.files.length === 0) {
+            //@ts-ignore
+            errorElem.textContent = 'No file selected.';
+            return;
+        }
+
+        //@ts-ignore
+        const file = fileInput.files[0];
+
+        let taskId = wasmHasher.nextTask(); 
+
+        let interval = setInterval(() => {
+            wasmHasher.taskProgress(taskId).then((res: any) => {
+                //@ts-ignore
+                progressElem.textContent = 'Progress: ' + res + '%';
+            });
+        }, 500);
+
+        const now = performance.now();
+        wasmHasher.hashFileMt(file, taskId).then((res: HashedFile) => {
+            const time = performance.now() - now;
+            //@ts-ignore
+            timeElem.textContent = 'Time: ' + time + 'ms';
+            
+            //@ts-ignore
+            resultElem.textContent = 'Hash completed: ' + res.hash();
+            wasmHasher.addFile(res);
+            wasmHasher.saveState();
+            //@ts-ignore
+            hashedFilesElem.textContent = 'Hashed files: ' + wasmHasher.files().map((f: Module.HashedFile) => {
+                let str = "NAME: " + f.name() + " HASH: " + f.hash(); 
+                return str;
+            }).join(' || \n\n ');
+        })
+        .catch((err: any) => {
+            //@ts-ignore
+            errorElem.textContent = 'Hash failed: ' + err.message;
+        })
+        .finally(() => {
+            //@ts-ignore
+            progressElem.textContent = 'Progress: 100%'
+            clearInterval(interval);
+        });
+    });
+})();

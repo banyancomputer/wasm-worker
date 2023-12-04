@@ -3,7 +3,6 @@ name = "wasm-hasher"
 version = "0.1.0"
 authors = ["amiller68 <alex@banyan.computer>"]
 edition = "2021"
-# rustflags = ["-C", "target-feature=+atomics,+bulk-memory,+mutable-globals"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -12,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook", "wee_alloc"]
 
 [dependencies]
-wasm-bindgen = "^0.2"
+wasm-bindgen = { version = "^0.2", default-features = false }
 cfg-if = "^0.1"
 console_error_panic_hook = { version = "^0.1", optional = true }
 wee_alloc = { version = "^0.4", optional = true }
@@ -24,12 +23,12 @@ futures-util = "^0.3"
 blake3 = "^1.5"
 gloo-worker = { version = "^0.5", features = ["futures"] }
 serde-wasm-bindgen = "^0.6"
-serde = "1.0.193"
-serde_json = "1.0.108"
-wasm-rs-shared-channel = "0.1.0"
-base64 = "0.21.5"
-# wasm-bindgen-rayon = "1.0.3"
-# rayon = "1.8.0"
+serde = "^1"
+serde_json = "^1"
+wasm-rs-shared-channel = "^0.1"
+base64 = "^0.21"
+wasm-bindgen-rayon = "^1"
+rayon = "^1.8"
 
 [dependencies.web-sys]
 version = "^0.3"
@@ -39,10 +38,6 @@ features = [
   "ReadableStream",
   "WritableStream",
   "console",
-  "IdbDatabase",
-  "IdbObjectStore",
-  "IdbFactory",
-  "IdbOpenDbRequest",
   "Storage",
 ]
 
@@ -52,6 +47,3 @@ wasm-bindgen-test = "0.3.13"
 [profile.release]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
-
-# [unstable]
-# build-std = ["panic_abort", "std"]

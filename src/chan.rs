@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use wasm_rs_shared_channel::spsc;
 
+use crate::utils;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Request {
     Update { progress: f64 },
@@ -39,23 +41,31 @@ impl Channel {
 
     pub fn run(&mut self, interval_secs: usize, callback: js_sys::Function) -> Result<(), JsValue> {
         console_error_panic_hook::set_once();
+        utils::init();
+        utils::log("run");
         loop {
             let res = self
                 .receiver
                 .recv(Some(std::time::Duration::from_secs(interval_secs as u64)));
-
+            utils::log("run: recv");
             match res {
-                Ok(request) => if let Some(request) = request {
-                    match request {
-                        Request::Update { progress } => {
-                            callback.call1(&JsValue::NULL, &JsValue::from(progress))?;
-                        }
-                        Request::Done => {
-                            break;
+                Ok(request) => {
+                    if let Some(request) = request {
+                        match request {
+                            Request::Update { progress } => {
+                                utils::log("run: update");
+                                callback.call1(&JsValue::NULL, &JsValue::from(progress))?;
+                            }
+                            Request::Done => {
+                                utils::log("run: done");
+                                break;
+                            }
                         }
                     }
-                },
-                Err(_) => {
+                }
+                Err(err) => {
+                    let err_msg = format!("run: err {:?}", err);
+                    utils::log(&err_msg);
                     break;
                 }
             }

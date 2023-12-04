@@ -47,6 +47,14 @@ impl State {
     }
 
     pub fn clear(&mut self) {
+        // Iterate over the files and remove them from the store
+        for file in &self.files {
+            for i in 0..file.count() {
+                utils::storage()
+                    .remove_item(&utils::chunk_key(&file.name(), i as usize))
+                    .unwrap();
+            }
+        }
         self.files.clear();
         utils::storage().remove_item(HASHED_FILES_KEY).unwrap();
     }
