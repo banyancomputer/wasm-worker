@@ -19,16 +19,17 @@
   </head>
   <body>
     <input type="file" id="fileInput">
-    <button id="uploadButton">Hash File</button>
+    <button id="hashFileButton">Hash File</button>
+    <button id="hashFileWithChannelButton">Hash File With Channel</button>
+    <button id="clearStateButton">Clear State</button>
     <br>
     <br>
-    <p> This example will hash a file on the main thread and twice on a worker thread. </p>
+    <p> Simple example using workers to hash and store a file with progress tracking </p>
 
-    <p id="response_0"> Worker 1 progress will appear here! </p>
-    <p id="response_1"> Worker 2 progress will appear here! </p>
-    <p id="response_2"> Main Thread progress will appear here! </p>
-    <p id="response_3"> Worker results will appear here! </p>
-    <p id="response_4"> Main Thread results will appear here! </p>
-    <script defer="defer" src="index.js"></script>
+    <p id="error"> </p>`
+    <p id="progress"> Progress: </p>
+    <p id="result"> Result: </p>
+    <p id="hashedFiles"> </p>
+    <script defer="defer" src="bootstrap.js"></script>
   </body>
 </html>

@@ -4,8 +4,14 @@
   "description": "Simple example of consuming a Wasm Web Worker with WebPack",
   "scripts": {
     "build": "webpack",
+    "build:wasm-mt": "cross-env RUSTFLAGS=\"-C target-feature=+atomics,+bulk-memory,+mutable-globals\" rustup run nightly wasm-pack build --target web",
     "dev": "webpack-dev-server",
     "test": "wasm-pack test --firefox --headless"
+  },
+  "dependencies": {
+    "comlink": "^4.4.1",
+    "cross-env": "^7.0.3",
+    "crossenv": "^0.0.2-security"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "^1",

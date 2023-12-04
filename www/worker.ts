@@ -1,28 +1,34 @@
 import { expose } from 'comlink';
 import * as Module from '../pkg';
 
-const obj = {
-    hasher: new Module.WasmHasher(),
-    taskTracker: new Map<number, number>(),
+export class HashWorker {
+    _taskTracker: Map<number, number>;
+    constructor(_init = 0) {
+        this._taskTracker = new Map<number, number>();
+    }
 
-    hashFile: (file: File, taskId: number) => {
-        console.log("hashFile");
-        console.log(file);
+    get taskTracker() {
+        return this._taskTracker;
+    }
 
-        obj.taskTracker.set(taskId, 0.0);
+    async hashFile(file: File, taskId: number) {
+        this._taskTracker.set(taskId, 0.0);
         let callback = (progress: number) => {
-            obj.taskTracker.set(taskId, progress);
+            this._taskTracker.set(taskId, (this._taskTracker.get(taskId) ?? 0.0) + progress);
         };
-        
-        let res = obj.hasher.hashFile(file, callback).then((res) => {
-            return res;
-        });
+        return await Module.hashFile(file, callback)
+    }
 
-        return res;
-    },
-};
-
-export type HashWorker = typeof obj;
+    async hashFileWithChannel(file: File): Promise<[Module.Channel, Promise<Module.HashedFile>]> {
+        let channel = new Module.Channel();
+        let sender = channel.sender();
+        let callback = (progress: number) => {
+            sender.update(progress);
+        };
+        return [channel, Module.hashFile(file, callback)];
+    }
 
   
-expose(obj);
+}
+
+expose(HashWorker);

@@ -27,3 +27,17 @@ pub fn init() {
 pub fn log(s: &str) {
     web_sys::console::log_1(&s.into());
 }
+
+pub fn storage() -> web_sys::Storage {
+    web_sys::window().unwrap().local_storage().unwrap().unwrap()
+}
+
+pub fn maybe_do(callback: Option<js_sys::Function>, value: &wasm_bindgen::JsValue) {
+    if let Some(callback) = callback {
+        callback.call1(&wasm_bindgen::JsValue::NULL, value).unwrap();
+    }
+}
+
+pub fn chunk_key(name: &str, chunk: usize) -> String {
+    format!("{}-{}", name, chunk)
+}
